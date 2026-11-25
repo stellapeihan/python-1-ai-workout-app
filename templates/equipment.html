@@ -1,0 +1,69 @@
+﻿{% extends "base.html" %}
+{% block title %}{{ item.name }} - 器材教學{% endblock %}
+{% block content %}
+<article class="card">
+  <p><a href="{{ url_for('index') }}">← 回到器材查詢</a></p>
+  <h1>{{ item.name }}</h1>
+  <p class="muted">{{ item.location_note }}</p>
+  <p>
+    {% for g in item.muscle_groups %}<span class="tag">{{ g }}</span>{% endfor %}
+    {% for p in item.training_purposes %}<span class="tag">{{ p }}</span>{% endfor %}
+  </p>
+
+  <div class="notice">
+    <p><strong>審閱狀態：</strong>{{ item.review.status }}</p>
+    <p><strong>審閱者：</strong>{{ item.review.reviewer }}</p>
+    <p><strong>來源：</strong>{{ item.review.source }}</p>
+    <p><strong>更新日期：</strong>{{ item.review.updated_at }}</p>
+  </div>
+
+  <div class="grid two">
+    <div>
+      <h2>器材資訊</h2>
+      <p><strong>常見別名：</strong>{{ item.aliases | join('、') }}</p>
+      <p><strong>適合程度：</strong>{{ item.level }}</p>
+      <h3>使用前檢查</h3>
+      <ul class="list-clean">{% for c in item.pre_use_checks %}<li>{{ c }}</li>{% endfor %}</ul>
+      <h3>調整器材步驟</h3>
+      <ol class="list-clean">{% for s in item.setup_steps %}<li>{{ s }}</li>{% endfor %}</ol>
+    </div>
+    <div>
+      <img class="equipment-img" src="{{ item.media.image }}" alt="{{ item.name }} 示意圖">
+      <p class="meta"><strong>文字版替代說明：</strong>{{ item.media.text_alternative }}</p>
+    </div>
+  </div>
+
+  <h2>動作教學</h2>
+  <h3>起始姿勢與動作步驟</h3>
+  <ol class="list-clean">{% for s in item.movement_steps %}<li>{{ s }}</li>{% endfor %}</ol>
+  <p><strong>呼吸提示：</strong>{{ item.breathing }}</p>
+
+  <h3>常見錯誤與避免方式</h3>
+  <table>
+    <thead><tr><th>常見錯誤</th><th>避免方式</th></tr></thead>
+    <tbody>
+      {% for m in item.common_mistakes %}
+      <tr><td>{{ m.mistake }}</td><td>{{ m.fix }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <h3>安全注意事項與停止警訊</h3>
+  <div class="notice danger">
+    <ul class="list-clean">
+      {% for n in item.safety_notes %}<li>{{ n }}</li>{% endfor %}
+    </ul>
+  </div>
+
+  <h3>可替代的器材或徒手動作</h3>
+  <ul class="list-clean">
+    {% for alt in item.alternatives %}
+    <li><strong>{{ alt.name }}</strong>：{{ alt.reason }}</li>
+    {% endfor %}
+  </ul>
+
+  <div class="actions">
+    <a class="btn" href="{{ url_for('plan') }}">用這個器材產生課表</a>
+  </div>
+</article>
+{% endblock %}

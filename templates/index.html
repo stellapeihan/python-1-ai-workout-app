@@ -1,0 +1,69 @@
+﻿{% extends "base.html" %}
+{% block title %}器材查詢 - NCU 健身器材指南{% endblock %}
+{% block content %}
+<section class="hero">
+  <h1>中央大學健身器材指南與基礎課表</h1>
+  <p>針對校內健身房新手情境設計的 MVP。你可以搜尋器材、查看審閱狀態與安全提醒，並依自己的目標、時間與可用器材產生一份可確認的基礎課表。</p>
+</section>
+
+<div class="grid two">
+  <section class="card">
+    <h2>搜尋器材</h2>
+    <form method="get" action="{{ url_for('index') }}">
+      <label for="q">器材名稱或別名</label>
+      <input id="q" name="q" type="text" value="{{ query }}" placeholder="例如：啞鈴、腿推機、lat pulldown">
+      <label for="muscle">目標肌群</label>
+      <select id="muscle" name="muscle">
+        <option value="">全部肌群</option>
+        {% for m in muscles %}
+        <option value="{{ m }}" {% if muscle == m %}selected{% endif %}>{{ m }}</option>
+        {% endfor %}
+      </select>
+      <div class="actions">
+        <button type="submit">搜尋</button>
+        <a class="btn secondary" href="{{ url_for('identify') }}">拍照輔助辨識</a>
+      </div>
+    </form>
+    <p class="meta">MVP 範圍：目前深入收錄 2-3 項校內常見器材示範內容。辨識不確定時，請改用搜尋或手動確認。</p>
+  </section>
+
+  <section class="card">
+    <h2>核心流程</h2>
+    <ol class="list-clean">
+      <li>拍照或搜尋中央大學校內健身房器材。</li>
+      <li>查看調整方式、動作教學、安全提醒與替代動作。</li>
+      <li>填寫目標、經驗、時間與可用器材，產生基礎課表。</li>
+      <li>訓練後回饋感受，由系統提出保守調整建議，確認後才套用。</li>
+    </ol>
+    <div class="notice warn small">
+      本產品不診斷傷病、不提供醫療或復健治療，也不保證特定訓練成果。
+    </div>
+  </section>
+</div>
+
+<section style="margin-top:24px;">
+  <h2>器材清單</h2>
+  {% if results %}
+  <div class="grid two">
+    {% for item in results %}
+    <article class="card">
+      <h3><a href="{{ url_for('equipment_detail', equipment_id=item.id) }}">{{ item.name }}</a></h3>
+      <p class="muted">{{ item.location_note }}</p>
+      <p>
+        {% for g in item.muscle_groups %}
+        <span class="tag">{{ g }}</span>
+        {% endfor %}
+      </p>
+      <p class="meta"><strong>審閱狀態：</strong>{{ item.review.status }}</p>
+      <p class="meta"><strong>適合程度：</strong>{{ item.level }}</p>
+      <div class="actions">
+        <a class="btn" href="{{ url_for('equipment_detail', equipment_id=item.id) }}">查看教學</a>
+      </div>
+    </article>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="notice">沒有找到符合條件的器材。請嘗試其他名稱、別名或肌群；若現場器材不在 MVP 清單中，請先向健身房工作人員確認。</div>
+  {% endif %}
+</section>
+{% endblock %}

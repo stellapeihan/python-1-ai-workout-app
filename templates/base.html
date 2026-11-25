@@ -1,0 +1,38 @@
+﻿<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}NCU 健身器材指南{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header class="site-header">
+    <div class="container nav-row">
+      <a class="brand" href="{{ url_for('index') }}">NCU 健身器材指南</a>
+      <nav class="nav">
+        <a href="{{ url_for('index') }}">器材查詢</a>
+        <a href="{{ url_for('identify') }}">拍照輔助辨識</a>
+        <a href="{{ url_for('plan') }}">產生課表</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="safety-banner" role="status">
+    <div class="container">
+      <strong>安全提醒：</strong>{{ safety_banner }}
+    </div>
+  </div>
+
+  <main class="container">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>本工具為中央大學校內健身房情境的 MVP 示範。內容僅供一般訓練參考，不構成醫療診斷、治療或成果保證。</p>
+      <p>有傷病、懷孕、慢性病或特殊健康狀況者，開始或調整訓練前應諮詢合格專業人士。</p>
+    </div>
+  </footer>
+</body>
+</html>

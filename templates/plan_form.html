@@ -1,0 +1,166 @@
+﻿{% extends "base.html" %}
+{% block title %}產生課表 - NCU 健身器材指南{% endblock %}
+{% block content %}
+<section class="card">
+  <h1>產生基礎課表</h1>
+  <p>填寫你的條件後，系統會產生一份保守、可確認的基礎課表。此課表不保證特定成果，也不構成醫療建議。</p>
+
+  <form method="post" action="{{ url_for('plan') }}">
+    <div class="row">
+      <div>
+        <label for="goal">訓練目標</label>
+        <select id="goal" name="goal">
+          {% set goal = form.get('goal', 'habit') %}
+          <option value="muscle_gain" {% if goal=='muscle_gain' %}selected{% endif %}>增肌</option>
+          <option value="strength" {% if goal=='strength' %}selected{% endif %}>提升肌力</option>
+          <option value="cardio" {% if goal=='cardio' %}selected{% endif %}>提升心肺</option>
+          <option value="general_fitness" {% if goal=='general_fitness' %}selected{% endif %}>一般體能</option>
+          <option value="habit" {% if goal=='habit' %}selected{% endif %}>建立運動習慣</option>
+        </select>
+      </div>
+      <div>
+        <label for="experience">經驗程度</label>
+        {% set exp = form.get('experience', 'beginner') %}
+        <select id="experience" name="experience">
+          <option value="beginner" {% if exp=='beginner' %}selected{% endif %}>新手</option>
+          <option value="experienced" {% if exp=='experienced' %}selected{% endif %}>具經驗</option>
+          <option value="returning" {% if exp=='returning' %}selected{% endif %}>回歸訓練</option>
+        </select>
+      </div>
+      <div>
+        <label for="days_per_week">每週可訓練天數</label>
+        <input id="days_per_week" name="days_per_week" type="number" min="1" max="6" value="{{ form.get('days_per_week', 2) }}">
+      </div>
+      <div>
+        <label for="minutes_per_session">每次可用時間（分鐘）</label>
+        <input id="minutes_per_session" name="minutes_per_session" type="number" min="15" max="120" value="{{ form.get('minutes_per_session', 30) }}">
+      </div>
+    </div>
+
+    <label for="location">訓練地點</label>
+    <input id="location" name="location" type="text" value="{{ form.get('location', '中央大學校內健身房') }}">
+
+    <fieldset class="fieldset">
+      <legend>可使用器材</legend>
+      {% set selected_eq = form.get('equipment', []) %}
+      <label><input type="checkbox" name="equipment" value="dumbbell" {% if 'dumbbell' in selected_eq %}checked{% endif %}> 啞鈴</label>
+      <label><input type="checkbox" name="equipment" value="leg_press" {% if 'leg_press' in selected_eq %}checked{% endif %}> 腿推機</label>
+      <label><input type="checkbox" name="equipment" value="lat_pulldown" {% if 'lat_pulldown' in selected_eq %}checked{% endif %}> 滑輪下拉機</label>
+      <label><input type="checkbox" name="equipment" value="bodyweight" {% if 'bodyweight' in selected_eq %}checked{% endif %}> 徒手/無器材</label>
+      <p class="meta">若現場器材不可用，課表會提供替代動作。</p>
+    </fieldset>
+
+    <label for="preferences">偏好或不想做的運動（選填）</label>
+    <input id="preferences" name="preferences" type="text" value="{{ form.get('preferences', '') }}" placeholder="例如：不想做弓箭步蹲">
+
+    <label for="limitations">傷病、疼痛或動作限制提醒（選填，自願填寫）</label>
+    <textarea id="limitations" name="limitations" placeholder="僅填寫你願意提供的提醒。系統不會診斷或保證安全。">{{ form.get('limitations', '') }}</textarea>
+
+    <label for="review_period">預計檢視進度的期間（選填）</label>
+    <input id="review_period" name="review_period" type="text" value="{{ form.get('review_period', '') }}" placeholder="例如：2 週後檢視感受，不代表成果保證">
+
+    <div class="actions">
+      <button type="submit">產生課表</button>
+    </div>
+  </form>
+</section>
+
+{% if generated %}
+<section class="card" style="margin-top:24px;">
+  <h2>你的基礎課表</h2>
+  <p class="meta">目標：{{ generated.goal }}｜經驗：{{ generated.experience }}｜每週 {{ generated.days_per_week }} 天｜每次 {{ generated.minutes_per_session }} 分鐘｜地點：{{ generated.location }}</p>
+  {% if generated.review_period %}<p class="meta">檢視期間（非成果保證）：{{ generated.review_period }}</p>{% endif %}
+
+  {% if generated.limitations_note %}
+  <div class="notice danger">{{ generated.limitations_note }}</div>
+  {% endif %}
+
+  <div class="notice warn">
+    <strong>一般訓練建議，非醫療建議：</strong>
+    <ul class="list-clean">
+      {% for s in generated.stop_signals %}<li>{{ s }}</li>{% endfor %}
+    </ul>
+  </div>
+
+  {% for session_plan in generated.sessions %}
+  <h3>{{ session_plan.day }}（{{ session_plan.focus }}，約 {{ session_plan.duration_minutes }} 分鐘）</h3>
+  <p><strong>暖身</strong></p>
+  <ul class="list-clean">{% for w in session_plan.warmup %}<li>{{ w }}</li>{% endfor %}</ul>
+
+  <table>
+    <thead><tr><th>動作</th><th>目標肌群</th><th>組數/次數或時間</th><th>休息</th><th>重量/負荷原則</th><th>替代動作</th><th>教學</th></tr></thead>
+    <tbody>
+      {% for ex in session_plan.main %}
+      <tr>
+        <td>{{ ex.name }}</td>
+        <td>{{ ex.muscle_group }}</td>
+        <td>{{ ex.sets }} 組 × {{ ex.reps_or_time }}</td>
+        <td>{{ ex.rest }}</td>
+        <td>{{ ex.load_principle }}</td>
+        <td>{{ ex.alternative }}</td>
+        <td><a href="{{ ex.demo_link }}">查看器材指南</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <p><strong>收操</strong></p>
+  <ul class="list-clean">{% for c in session_plan.cooldown %}<li>{{ c }}</li>{% endfor %}</ul>
+  {% endfor %}
+
+  <h3>漸進與一般注意事項</h3>
+  <ul class="list-clean">{% for n in generated.general_notes %}<li>{{ n }}</li>{% endfor %}</ul>
+</section>
+
+<section class="card" style="margin-top:24px;">
+  <h2>訓練後回饋與保守調整</h2>
+  <p>回報後系統只會提出保守調整建議；<strong>不會自動套用</strong>，需由你確認後再調整。</p>
+  <form method="post" action="{{ url_for('plan_feedback') }}">
+    <div class="row">
+      <div>
+        <label for="difficulty">感受難度</label>
+        <select id="difficulty" name="difficulty">
+          {% set fb = feedback or {} %}
+          <option value="just_right" {% if fb.get('difficulty')=='just_right' %}selected{% endif %}>剛好</option>
+          <option value="too_easy" {% if fb.get('difficulty')=='too_easy' %}selected{% endif %}>太輕鬆</option>
+          <option value="too_hard" {% if fb.get('difficulty')=='too_hard' %}selected{% endif %}>太吃力</option>
+        </select>
+      </div>
+      <div>
+        <label for="completed">完成狀況</label>
+        <select id="completed" name="completed">
+          <option value="yes" {% if fb.get('completed')=='yes' %}selected{% endif %}>大致完成</option>
+          <option value="partial" {% if fb.get('completed')=='partial' %}selected{% endif %}>部分完成</option>
+          <option value="no" {% if fb.get('completed')=='no' %}selected{% endif %}>幾乎未完成</option>
+        </select>
+      </div>
+      <div>
+        <label for="time_change">可用時間變動</label>
+        <select id="time_change" name="time_change">
+          <option value="same" {% if fb.get('time_change')=='same' %}selected{% endif %}>沒有變動</option>
+          <option value="less_time" {% if fb.get('time_change')=='less_time' %}selected{% endif %}>時間變少</option>
+        </select>
+      </div>
+      <div>
+        <label for="equipment_change">器材變動</label>
+        <select id="equipment_change" name="equipment_change">
+          <option value="same" {% if fb.get('equipment_change')=='same' %}selected{% endif %}>沒有變動</option>
+          <option value="no_equipment" {% if fb.get('equipment_change')=='no_equipment' %}selected{% endif %}>器材不可用</option>
+        </select>
+      </div>
+    </div>
+    <label for="discomfort">不適或疼痛回報（選填）</label>
+    <textarea id="discomfort" name="discomfort" placeholder="若有疼痛、暈眩、胸悶或不適，請描述；系統不會診斷。">{{ fb.get('discomfort', '') }}</textarea>
+    <div class="actions"><button type="submit">取得調整建議</button></div>
+  </form>
+
+  {% if feedback_result %}
+  <div class="notice {% if feedback_result.safety_first %}danger{% else %}warn{% endif %}" style="margin-top:16px;">
+    <h3>調整建議（需你確認後才套用）</h3>
+    <ul class="list-clean">{% for s in feedback_result.suggestions %}<li>{{ s }}</li>{% endfor %}</ul>
+    <p class="meta">{{ feedback_result.disclaimer }}</p>
+  </div>
+  {% endif %}
+</section>
+{% endif %}
+{% endblock %}

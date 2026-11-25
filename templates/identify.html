@@ -1,0 +1,45 @@
+﻿{% extends "base.html" %}
+{% block title %}拍照輔助辨識 - NCU 健身器材指南{% endblock %}
+{% block content %}
+<section class="card">
+  <h1>拍照輔助辨識</h1>
+  <p>此功能僅作為輔助入口。系統不會在辨識不確定時直接提供未驗證建議；請確認器材名稱後再查看教學。</p>
+  <div class="notice warn">
+    <strong>重要：</strong>目前為 MVP 示範版，未使用真實影像辨識模型。若你上傳照片，系統只會提供保守的確認流程，不會自動判定器材安全性或適用性。
+  </div>
+
+  <form method="post" enctype="multipart/form-data">
+    <label for="photo">上傳器材照片（選填，用於輔助確認）</label>
+    <input id="photo" name="photo" type="file" accept="image/*">
+    <div class="actions">
+      <button type="submit">送出輔助確認</button>
+      <a class="btn secondary" href="{{ url_for('index') }}">改用搜尋</a>
+    </div>
+  </form>
+
+  {% if error %}
+  <div class="notice danger">{{ error }}</div>
+  {% endif %}
+
+  {% if confidence %}
+    {% if suggestion and confidence == "medium" %}
+    <div class="notice">
+      <p><strong>可能匹配（需你確認）：</strong>{{ suggestion.name }}</p>
+      <p class="meta">檔名：{{ filename }}。此結果僅根據檔名做低風險提示，不代表影像辨識完成。請確認後再查看教學。</p>
+      <div class="actions">
+        <a class="btn" href="{{ url_for('equipment_detail', equipment_id=suggestion.id) }}">確認並查看 {{ suggestion.name }}</a>
+        <a class="btn secondary" href="{{ url_for('index') }}">不是這台，改用搜尋</a>
+      </div>
+    </div>
+    {% else %}
+    <div class="notice warn">
+      <p><strong>無法可靠辨識。</strong>為避免提供未驗證建議，請改用搜尋或手動選擇器材。</p>
+      {% if filename %}<p class="meta">已收到檔案：{{ filename }}</p>{% endif %}
+      <div class="actions">
+        <a class="btn" href="{{ url_for('index') }}">前往搜尋器材</a>
+      </div>
+    </div>
+    {% endif %}
+  {% endif %}
+</section>
+{% endblock %}

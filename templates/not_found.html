@@ -1,0 +1,9 @@
+﻿{% extends "base.html" %}
+{% block title %}找不到頁面{% endblock %}
+{% block content %}
+<div class="card">
+  <h1>找不到內容</h1>
+  <p>{{ message or "你要找的頁面不存在。" }}</p>
+  <div class="actions"><a class="btn" href="{{ url_for('index') }}">回到首頁</a></div>
+</div>
+{% endblock %}
